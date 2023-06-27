@@ -319,6 +319,13 @@ test_connection(Conn, StayLocked) ->
         {error, FailedReset} ->
           exit({connection_down, {and_conn_reset_failed, FailedReset}})
       end;
+    #error_packet{code = 4031} -> % disconnected by the server because of inactivity
+      case reset_connection(emysql_conn_mgr:pools(), Conn, StayLocked) of
+        NewConn when is_record(NewConn, emysql_connection) ->
+          NewConn;
+        {error, FailedReset} ->
+          exit({connection_down, {and_conn_reset_failed, FailedReset}})
+      end;
     _ ->
        NewConn = Conn#emysql_connection{last_test_time = now_seconds()},
        case StayLocked of
